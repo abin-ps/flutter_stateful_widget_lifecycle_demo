@@ -2,37 +2,38 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-class DidChangeDependencyDemo extends StatefulWidget {
-  const DidChangeDependencyDemo({super.key});
+class DidUpdateWidgetDemo extends StatefulWidget {
+  const DidUpdateWidgetDemo({
+    super.key,
+    required this.title,
+    required this.changeTitle,
+  });
 
+  final String title;
+  final void Function(String) changeTitle;
   @override
-  State<DidChangeDependencyDemo> createState() => _DidChangeDependencyDemoState();
+  State<DidUpdateWidgetDemo> createState() => _DidUpdateWidgetDemoState();
 }
 
-class _DidChangeDependencyDemoState extends State<DidChangeDependencyDemo> {
-  String title = '';
+class _DidUpdateWidgetDemoState extends State<DidUpdateWidgetDemo> {
+  String changeDescription = '';
   final TextEditingController textFieldController = TextEditingController();
 
-  //update on initstate
   @override
-  void initState() {
-    super.initState();
-    if (mounted) {
-      title = 'Wait for user input...';
-      setState(() {});
-    }
-  }
+  void didUpdateWidget(covariant DidUpdateWidgetDemo oldWidget) {
+    super.didUpdateWidget(oldWidget);
 
-  @override
-  void didChangeDependencies() {
-    Future.delayed(const Duration(seconds: 5), () {
+    if (widget.title != oldWidget.title) {
+      print('title chaged by parent widget...');
       if (mounted) {
-        title = 'I clear all you typed 😁😁';
+        changeDescription = 'parent widget update...';
         setState(() {});
       }
-    });
-
-    super.didChangeDependencies();
+      Future.delayed(const Duration(seconds: 5), () {
+        changeDescription = '';
+        setState(() {});
+      });
+    }
   }
 
   @override
@@ -44,16 +45,20 @@ class _DidChangeDependencyDemoState extends State<DidChangeDependencyDemo> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              title,
+              widget.title,
               style: const TextStyle(fontSize: 40),
+              maxLines: 5,
             ),
+            const SizedBox(height: 20),
+            changeDescription.isEmpty
+                ? const SizedBox()
+                : Text(
+                    changeDescription,
+                    style: const TextStyle(fontSize: 35),
+                    maxLines: 5,
+                  ),
             const SizedBox(height: 30),
             TextFormField(
-              onFieldSubmitted: (v) {
-                setState(() {
-                  title = v;
-                });
-              },
               controller: textFieldController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -62,16 +67,14 @@ class _DidChangeDependencyDemoState extends State<DidChangeDependencyDemo> {
             const SizedBox(height: 30),
             IconButton(
                 onPressed: () {
-                  setState(() {
-                    title = textFieldController.text;
-                  });
+                  widget.changeTitle(textFieldController.text);
                 },
                 hoverColor: Colors.grey.shade300,
                 disabledColor: Colors.grey,
                 icon: const Icon(
                   Icons.check,
                   weight: 32,
-                  size: 48,
+                  size: 40,
                   color: Colors.blue,
                 ))
           ],
